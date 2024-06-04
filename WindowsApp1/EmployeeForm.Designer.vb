@@ -32,12 +32,17 @@ Partial Class EmployeeForm
         Me.DeleteButton = New System.Windows.Forms.Button()
         Me.CloseButton = New System.Windows.Forms.Button()
         Me.DataGridView1 = New NarsilWorks.DevLibWinForms.DataGridView()
+        Me.EmployeeKey = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.UserName = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.FirstName = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.LastName = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.Email = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.DataGridViewFilter1 = New NarsilWorks.DevLibWinForms.DataGridViewFilter()
         Me.SearchAll = New System.Windows.Forms.TextBox()
         Me.OpenFileDialog1 = New System.Windows.Forms.OpenFileDialog()
         Me.Label1 = New System.Windows.Forms.Label()
         Me.CustomPanel1 = New NarsilWorks.DevLibWinForms.CustomPanel()
-        Me.Footer1 = New NarsilWorks.DevLibWinForms.Footer()
+        Me.FooterEmployee = New NarsilWorks.DevLibWinForms.Footer()
         Me.RefreshLinkLabel = New NarsilWorks.DevLibWinForms.LinkLabel()
         Me.PanelBox = New System.Windows.Forms.Panel()
         Me.Label6 = New System.Windows.Forms.Label()
@@ -48,11 +53,6 @@ Partial Class EmployeeForm
         Me.LastNameTextBox = New System.Windows.Forms.TextBox()
         Me.FirstNameTextBox = New System.Windows.Forms.TextBox()
         Me.UserNameTextBox = New System.Windows.Forms.TextBox()
-        Me.EmployeeKey = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.UserName = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.FirstName = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.LastName = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.Email = New System.Windows.Forms.DataGridViewTextBoxColumn()
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.PanelBox.SuspendLayout()
         Me.SuspendLayout()
@@ -197,6 +197,42 @@ Partial Class EmployeeForm
         Me.DataGridView1.Size = New System.Drawing.Size(704, 347)
         Me.DataGridView1.TabIndex = 3
         '
+        'EmployeeKey
+        '
+        Me.EmployeeKey.DataPropertyName = "EmployeeKey"
+        Me.EmployeeKey.HeaderText = "EmployeeKey"
+        Me.EmployeeKey.Name = "EmployeeKey"
+        Me.EmployeeKey.ReadOnly = True
+        '
+        'UserName
+        '
+        Me.UserName.DataPropertyName = "UserName"
+        Me.UserName.HeaderText = "UserName"
+        Me.UserName.Name = "UserName"
+        Me.UserName.ReadOnly = True
+        '
+        'FirstName
+        '
+        Me.FirstName.DataPropertyName = "FirstName"
+        Me.FirstName.HeaderText = "FirstName"
+        Me.FirstName.Name = "FirstName"
+        Me.FirstName.ReadOnly = True
+        '
+        'LastName
+        '
+        Me.LastName.DataPropertyName = "LastName"
+        Me.LastName.HeaderText = "LastName"
+        Me.LastName.Name = "LastName"
+        Me.LastName.ReadOnly = True
+        '
+        'Email
+        '
+        Me.Email.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill
+        Me.Email.DataPropertyName = "Email"
+        Me.Email.HeaderText = "Email"
+        Me.Email.Name = "Email"
+        Me.Email.ReadOnly = True
+        '
         'DataGridViewFilter1
         '
         Me.DataGridViewFilter1.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
@@ -247,25 +283,25 @@ Partial Class EmployeeForm
         Me.CustomPanel1.Size = New System.Drawing.Size(66, 107)
         Me.CustomPanel1.TabIndex = 12
         '
-        'Footer1
+        'FooterEmployee
         '
-        Me.Footer1.AlertIconVisible = False
-        Me.Footer1.AlertType = NarsilWorks.DevLibWinForms.Footer.AlertTypeStatusConstants.Info
-        Me.Footer1.AutoSize = True
-        Me.Footer1.DatabaseName = ""
-        Me.Footer1.DatabaseUser = ""
-        Me.Footer1.Dock = System.Windows.Forms.DockStyle.Bottom
-        Me.Footer1.Location = New System.Drawing.Point(0, 425)
-        Me.Footer1.LoggedOnUser = ""
-        Me.Footer1.Name = "Footer1"
-        Me.Footer1.ProgressBarStyle = System.Windows.Forms.ProgressBarStyle.Blocks
-        Me.Footer1.ProgressBarVisible = False
-        Me.Footer1.ProgressValue = 0
-        Me.Footer1.RenderMode = System.Windows.Forms.ToolStripRenderMode.System
-        Me.Footer1.ServerName = ""
-        Me.Footer1.Size = New System.Drawing.Size(800, 25)
-        Me.Footer1.Status = ""
-        Me.Footer1.TabIndex = 13
+        Me.FooterEmployee.AlertIconVisible = False
+        Me.FooterEmployee.AlertType = NarsilWorks.DevLibWinForms.Footer.AlertTypeStatusConstants.Info
+        Me.FooterEmployee.AutoSize = True
+        Me.FooterEmployee.DatabaseName = ""
+        Me.FooterEmployee.DatabaseUser = ""
+        Me.FooterEmployee.Dock = System.Windows.Forms.DockStyle.Bottom
+        Me.FooterEmployee.Location = New System.Drawing.Point(0, 425)
+        Me.FooterEmployee.LoggedOnUser = ""
+        Me.FooterEmployee.Name = "FooterEmployee"
+        Me.FooterEmployee.ProgressBarStyle = System.Windows.Forms.ProgressBarStyle.Blocks
+        Me.FooterEmployee.ProgressBarVisible = False
+        Me.FooterEmployee.ProgressValue = 0
+        Me.FooterEmployee.RenderMode = System.Windows.Forms.ToolStripRenderMode.System
+        Me.FooterEmployee.ServerName = ""
+        Me.FooterEmployee.Size = New System.Drawing.Size(800, 25)
+        Me.FooterEmployee.Status = ""
+        Me.FooterEmployee.TabIndex = 13
         '
         'RefreshLinkLabel
         '
@@ -361,50 +397,15 @@ Partial Class EmployeeForm
         Me.UserNameTextBox.Size = New System.Drawing.Size(167, 20)
         Me.UserNameTextBox.TabIndex = 1
         '
-        'EmployeeKey
-        '
-        Me.EmployeeKey.DataPropertyName = "EmployeeKey"
-        Me.EmployeeKey.HeaderText = "EmployeeKey"
-        Me.EmployeeKey.Name = "EmployeeKey"
-        Me.EmployeeKey.ReadOnly = True
-        '
-        'UserName
-        '
-        Me.UserName.DataPropertyName = "UserName"
-        Me.UserName.HeaderText = "UserName"
-        Me.UserName.Name = "UserName"
-        Me.UserName.ReadOnly = True
-        '
-        'FirstName
-        '
-        Me.FirstName.DataPropertyName = "FirstName"
-        Me.FirstName.HeaderText = "FirstName"
-        Me.FirstName.Name = "FirstName"
-        Me.FirstName.ReadOnly = True
-        '
-        'LastName
-        '
-        Me.LastName.DataPropertyName = "LastName"
-        Me.LastName.HeaderText = "LastName"
-        Me.LastName.Name = "LastName"
-        Me.LastName.ReadOnly = True
-        '
-        'Email
-        '
-        Me.Email.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill
-        Me.Email.DataPropertyName = "Email"
-        Me.Email.HeaderText = "Email"
-        Me.Email.Name = "Email"
-        Me.Email.ReadOnly = True
-        '
         'EmployeeForm
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.BackColor = System.Drawing.SystemColors.Control
         Me.ClientSize = New System.Drawing.Size(800, 450)
         Me.Controls.Add(Me.PanelBox)
         Me.Controls.Add(Me.RefreshLinkLabel)
-        Me.Controls.Add(Me.Footer1)
+        Me.Controls.Add(Me.FooterEmployee)
         Me.Controls.Add(Me.CustomPanel1)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.SearchAll)
@@ -418,6 +419,7 @@ Partial Class EmployeeForm
         Me.Controls.Add(Me.EditButton)
         Me.Controls.Add(Me.ImportButton)
         Me.Controls.Add(Me.ExportButton)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "EmployeeForm"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "EmployeeForm"
@@ -443,7 +445,7 @@ Partial Class EmployeeForm
     Friend WithEvents Label1 As Windows.Forms.Label
     Public WithEvents DataGridViewFilter1 As NarsilWorks.DevLibWinForms.DataGridViewFilter
     Friend WithEvents CustomPanel1 As NarsilWorks.DevLibWinForms.CustomPanel
-    Friend WithEvents Footer1 As NarsilWorks.DevLibWinForms.Footer
+    Friend WithEvents FooterEmployee As NarsilWorks.DevLibWinForms.Footer
     Friend WithEvents RefreshLinkLabel As NarsilWorks.DevLibWinForms.LinkLabel
     Friend WithEvents PanelBox As Windows.Forms.Panel
     Friend WithEvents EmailTextBox As Windows.Forms.TextBox

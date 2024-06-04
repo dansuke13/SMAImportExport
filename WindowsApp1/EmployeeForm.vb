@@ -11,15 +11,12 @@ Public Class EmployeeForm
     Private m_IsEditing As Boolean = False
     Private m_dtdoor As DataTable
     Private m_EmployeeKey As Integer = 0
-    'Private dtm As DataManager
-    'Private m_MainConnStr As String = String.Empty
-    'Private m_InitialConnStr As String = ""
 
 
     Private Sub EmployeeForm_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         m_IsLoading = True
 
-        Call Initialize()
+        'Call Initialize()
         Call RefreshList()
 
         ImportButton.Enabled = True
@@ -40,28 +37,15 @@ Public Class EmployeeForm
                 m_dtdoor.Dispose()
             End Using
         Catch ex As Exception
-            MsgBox("Error")
+            MsgBox("Error Search")
         End Try
     End Sub
-
-
-    'Private Sub LoadReasonType()
-    '    Try
-    '        Using m_Dmgr As New DataManager(m_ConStr)
-    '            m_dtdoor = m_Dmgr.GetDataTable("SELECT EmployeeKey, UserName, FirstName, LastName, Email FROM dbo.tcoEmployee")
-    '            DataGridView1.DataSource = m_dtdoor
-    '            m_dtdoor.Dispose()
-    '        End Using
-    '    Catch ex As Exception
-    '        MsgBox("Error")
-    '    End Try
-    'End Sub
 
 
     Private Sub SearchAll_Call()
         Using m_Dmgr As New DataManager(m_ConStr)
             Try
-                m_dtdoor = m_Dmgr.GetDataTable("SELECT * FROM dbo.tcoEmployee WHERE CONCAT(UserName, FirstName, LastName, Email) LIKE '%" & SearchAll.Text & "%'")
+                m_dtdoor = m_Dmgr.GetDataTable("SELECT EmployeeKey, UserName, FirstName, LastName, Email FROM dbo.tcoEmployee WHERE CONCAT(UserName, FirstName, LastName, Email) LIKE '%" & SearchAll.Text & "%'")
                 DataGridView1.DataSource = m_dtdoor
             Catch ex As Exception
                 MsgBox("Error")
@@ -70,6 +54,7 @@ Public Class EmployeeForm
     End Sub
 
     Private Sub Import_Click(sender As Object, e As EventArgs) Handles ImportButton.Click
+        'Open and choose file to Import
         Dim ofd As New OpenFileDialog
         Dim UserName As String
         Dim FirstName As String
@@ -79,18 +64,25 @@ Public Class EmployeeForm
         ofd.Filter = "Excel 2007 files *.xlsx|*.xlsx"
         If ofd.ShowDialog = System.Windows.Forms.DialogResult.OK Then
             Try
+
                 Using sl = New SpreadsheetLight.SLDocument(ofd.FileName)
                     Dim ws As SpreadsheetLight.SLWorksheetStatistics = sl.GetWorksheetStatistics()
                     Dim m_MaxRows = ws.NumberOfRows
                     Using m_Dmgr As New DataManager(m_ConStr)
+
+                        'Importing data rows except with first row
                         For ix As Integer = 2 To m_MaxRows
                             UserName = Trim(sl.GetCellValueAsString(ix, 1))
                             FirstName = Trim(sl.GetCellValueAsString(ix, 2))
                             LastName = Trim(sl.GetCellValueAsString(ix, 3))
                             Email = Trim(sl.GetCellValueAsString(ix, 4))
+
+                            'Check if existing the rows
                             Dim m_existing As Boolean = False
                             If UserName <> "" Then
                                 m_existing = m_Dmgr.GetCount("dbo.tcoEmployee WHERE UserName = @p1", UserName)
+
+                                'if not existing the rows
                                 If Not m_existing Then
                                     EmployeeKey = m_Dmgr.GetValue("EXEC ssh_getnextnumberapps @p1", 0, "EmployeeKey")
                                     Dim q As New QueryBuilder("tcoEmployee")
@@ -100,6 +92,8 @@ Public Class EmployeeForm
                                     q.AddFieldValuePair("FirstName", FirstName, True)
                                     q.AddFieldValuePair("LastName", LastName, True)
                                     q.AddFieldValuePair("Email", Email, True)
+
+                                    'Save to the SQL Server
                                     m_Dmgr.ExecuteNonQuery(q.GetQuery)
                                 End If
                             End If
@@ -112,12 +106,12 @@ Public Class EmployeeForm
             Catch ex As Exception
                 MsgBox("Error Import")
             End Try
-
         End If
     End Sub
 
     Private Sub ExportButton_Click(sender As Object, e As EventArgs) Handles ExportButton.Click
         Try
+            'Open and choose file to Export
             Dim sfd As New SaveFileDialog
             sfd.Filter = "Excel 2007 files (*.xlsx)|*.xlsx"
             If sfd.ShowDialog = System.Windows.Forms.DialogResult.OK Then
@@ -126,20 +120,22 @@ Public Class EmployeeForm
                     Dim m_Dmgr As New DataManager(m_ConStr)
                     Dim dataTable As DataTable = m_Dmgr.GetDataTable("SELECT UserName, FirstName, LastName, Email FROM dbo.tcoEmployee")
 
-                    For col As Integer = 0 To dataTable.Columns.Count - 1
-                        sl.SetCellValue(1, col + 1, dataTable.Columns(col).ColumnName)
+                    'Add column headers to the Excel file
+                    For cl As Integer = 0 To dataTable.Columns.Count - 1
+                        sl.SetCellValue(1, cl + 1, dataTable.Columns(cl).ColumnName)
                     Next
 
-                    For row As Integer = 0 To dataTable.Rows.Count - 1
-                        For col As Integer = 0 To dataTable.Columns.Count - 1
-                            sl.SetCellValue(row + 2, col + 1, dataTable.Rows(row)(col).ToString())
+                    'Add data rows to the Excel file
+                    For rw As Integer = 0 To dataTable.Rows.Count - 1
+                        For cl As Integer = 0 To dataTable.Columns.Count - 1
+                            sl.SetCellValue(rw + 2, cl + 1, dataTable.Rows(rw)(cl).ToString())
                         Next
                     Next
 
+                    'Save to Excel file
                     sl.SaveAs(sfd.FileName)
                     MessageBox.Show("Export Successful")
                 End Using
-
             End If
         Catch ex As Exception
             MsgBox("Error Export")
@@ -156,6 +152,7 @@ Public Class EmployeeForm
             LastNameTextBox.Text = String.Empty
             EmailTextBox.Text = String.Empty
 
+            UserNameTextBox.Enabled = True
             ImportButton.Enabled = False
             ExportButton.Enabled = False
             AddButton.Enabled = False
@@ -231,32 +228,27 @@ Public Class EmployeeForm
         Try
             SaveButton.Enabled = False
 
+            '
             If UserNameTextBox.Text.Trim.Length = 0 Then
                 MsgBox("Please provide reason code!", MsgBoxStyle.Exclamation, "No Data")
                 SaveButton.Enabled = True
                 UserNameTextBox.Focus()
-                'Cancel = True
                 Exit Try
             End If
 
             Using m_DMgr As New DataManager(m_ConStr)
 
-                Dim q As New QueryBuilder("tcoEmployee")
 
+                Dim q As New QueryBuilder("tcoEmployee")
                 If m_IsEditing = False Then
-                    'Using m_DMgr As New DataManager(m_MainConnStr)
-                    'check if already maintained
-                    'Dim m_IsExisting As Boolean = m_DMgr.GetCount("tsoReasonCode", "ReasonCode = '" & txtReasonCode.Text.Trim & "' ") > 0
                     Dim m_IsExisting As Boolean = m_DMgr.GetCount("dbo.tcoEmployee WHERE UserName = @p1", New Parameter(UserNameTextBox.Text.Trim)) > 0
                     If m_IsExisting = True Then
-                        MsgBox("Reason code already exist in the database!", MsgBoxStyle.Exclamation, "Duplicate Record")
-                        'Cancel = True
+                        MsgBox("Username already exist in the database!", MsgBoxStyle.Exclamation, "Duplicate Record")
                         Exit Try
                     End If
                     Dim EmployeeKey As Integer = 0
                     EmployeeKey = m_DMgr.GetValue("EXEC ssh_getnextnumberapps @p1", 0, "EmployeeKey")
                     q.CommandType = QueryBuilder.CommandQuery.cqINSERT
-
                     q.AddFieldValuePair("EmployeeKey", EmployeeKey, True)
                     q.AddFieldValuePair("UserName", UserNameTextBox.Text, True)
                     q.AddFieldValuePair("FirstName", FirstNameTextBox.Text, True)
@@ -265,11 +257,8 @@ Public Class EmployeeForm
 
                     m_DMgr.ExecuteNonQuery(q.GetQuery)
 
-                    'End Using
-
                     PanelBox.Visible = False
                     MsgBox("The record was saved successfully!", MsgBoxStyle.Information, "Success")
-
                 Else
                     q.CommandType = QueryBuilder.CommandQuery.cqUPDATE
                     q.AddFilter("EmployeeKey=" & m_EmployeeKey)
@@ -284,7 +273,14 @@ Public Class EmployeeForm
                 End If
             End Using
 
-            SaveButton.Enabled = True
+            ImportButton.Enabled = True
+            ExportButton.Enabled = True
+            AddButton.Enabled = True
+            EditButton.Enabled = True
+            SaveButton.Enabled = False
+            CancelButton.Enabled = False
+            DeleteButton.Enabled = True
+            PanelBox.Visible = False
             Call RefreshList()
             m_IsLoading = True
         Catch ex As Exception
@@ -318,11 +314,9 @@ Public Class EmployeeForm
                         End If
 
                         'Delete Reason
-                        'm_DMgr.ExecuteNonQuery("DELETE FROM  tsoReasonCode WHERE ReasonKey= '" & dgvr.Cells("ReasonKey").Value & "'")
                         m_DMgr.ExecuteNonQuery("DELETE FROM dbo.tcoEmployee WHERE UserName = @p1", dgvr.Cells("UserName").Value)
 
                         Call RefreshList()
-
                         Call SearchAll_Call()
 
                         MsgBox("The record was deleted successfully!", MsgBoxStyle.Information, "Success")
@@ -345,5 +339,9 @@ Public Class EmployeeForm
 
     Private Sub RefreshLinkLabel_LinkClicked(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles RefreshLinkLabel.LinkClicked
         Call SearchAll_Call()
+    End Sub
+
+    Private Sub EmployeeForm_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
+
     End Sub
 End Class

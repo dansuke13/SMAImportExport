@@ -2,22 +2,23 @@
 Imports NarsilWorks.DevLibData
 Imports NarsilWorks.DevLibWinForms
 Imports SpreadsheetLight
+Imports Excel = Microsoft.Office.Interop.Excel
 Imports DocumentFormat.OpenXml.InkML
-Imports DocumentFormat.OpenXml.Wordprocessing
 Imports System.Windows.Forms
 
-Public Class ShippingForm
+Public Class EmployeeDoorForm
     Private m_IsLoading As Boolean = False
     Private m_IsEditing As Boolean = False
     Private m_dtdoor As DataTable
+    Private m_EmployeeKey As Integer = 0
     Private m_DoorKey As Integer = 0
 
-
-    Private Sub ShippingForm_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+    Private Sub EmployeeDoorForm_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         m_IsLoading = True
 
         'Call Initialize()
         Call RefreshList()
+        'Call LoadReasonType()
 
         ImportButton.Enabled = True
         ExportButton.Enabled = True
@@ -30,20 +31,43 @@ Public Class ShippingForm
     End Sub
 
     Private Sub RefreshList()
-        Using m_Dmgr As New DataManager(m_ConStr)
-            Try
-                m_dtdoor = m_Dmgr.GetDataTable("SELECT DoorKey, DoorID, DoorName, Description FROM dbo.tcoDoor")
+        Try
+            Using m_Dmgr As New DataManager(m_ConStr)
+                m_dtdoor = m_Dmgr.GetDataTable("SELECT a.EmployeeKey, a.UserName, a.FirstName, a.LastName, a.Email, b.DoorKey, b.DoorID, b.DoorName, b.Description 
+                                                FROM dbo.tcoEmployee AS a
+                                                INNER JOIN dbo.tcoDoor AS b
+                                                ON a.EmployeeKey = b.DoorKey")
                 DataGridView1.DataSource = m_dtdoor
-            Catch ex As Exception
-                MsgBox("Error")
-            End Try
-        End Using
+                m_dtdoor.Dispose()
+            End Using
+        Catch ex As Exception
+            MsgBox("Error")
+        End Try
     End Sub
+
+    'Private Sub LoadReasonType()
+    '    Try
+    '        Using m_Dmgr As New DataManager(m_ConStr)
+    '            m_dtdoor = m_Dmgr.GetDataTable("SELECT EmployeeKey, UserName, FirstName, LastName, Email FROM dbo.tcoEmployee
+    '                                             UNION ALL
+    '                                            SELECT DoorKey, DoorID, DoorName, Description FROM dbo.tcoDoor FROM dbo.tcoDoor")
+    '            DataGridView1.DataSource = m_dtdoor
+    '            m_dtdoor.Dispose()
+    '        End Using
+    '    Catch ex As Exception
+    '        MsgBox("Error")
+    '    End Try
+    'End Sub
+
 
     Private Sub SearchAll_Call()
         Using m_Dmgr As New DataManager(m_ConStr)
             Try
-                m_dtdoor = m_Dmgr.GetDataTable("SELECT * FROM dbo.tcoDoor WHERE CONCAT(DoorKey, DoorID, DoorName, Description) LIKE '%" & SearchAll.Text & "%'")
+                m_dtdoor = m_Dmgr.GetDataTable("SELECT *
+                                                FROM dbo.tcoEmployee AS a
+                                                INNER JOIN dbo.tcoDoor AS b
+                                                ON a.EmployeeKey = b.DoorKey
+                                                WHERE CONCAT(a.EmployeeKey, a.UserName, a.FirstName, a.LastName, a.Email, b.DoorKey, b.DoorID, b.DoorName, b.Description) LIKE '%" & SearchAll.Text & "%'")
                 DataGridView1.DataSource = m_dtdoor
             Catch ex As Exception
                 MsgBox("Error")
@@ -51,35 +75,37 @@ Public Class ShippingForm
         End Using
     End Sub
 
-    Private Sub ImportButton_Click(sender As Object, e As EventArgs) Handles ImportButton.Click
+    Private Sub Import_Click(sender As Object, e As EventArgs) Handles ImportButton.Click
         Dim ofd As New OpenFileDialog
-        Dim DoorKey As Integer = 0
-        Dim DoorID As String
-        Dim DoorName As String
-        Dim Description As String
+        Dim UserName As String
+        Dim FirstName As String
+        Dim LastName As String
+        Dim Email As String
+        Dim EmployeeKey As Integer = 0
         ofd.Filter = "Excel 2007 files *.xlsx|*.xlsx"
         If ofd.ShowDialog = System.Windows.Forms.DialogResult.OK Then
             Try
                 Using sl = New SpreadsheetLight.SLDocument(ofd.FileName)
                     Dim ws As SpreadsheetLight.SLWorksheetStatistics = sl.GetWorksheetStatistics()
                     Dim m_MaxRows = ws.NumberOfRows
-
                     Using m_Dmgr As New DataManager(m_ConStr)
                         For ix As Integer = 2 To m_MaxRows
-                            DoorID = Trim(sl.GetCellValueAsString(ix, 1))
-                            DoorName = Trim(sl.GetCellValueAsString(ix, 2))
-                            Description = Trim(sl.GetCellValueAsString(ix, 3))
+                            UserName = Trim(sl.GetCellValueAsString(ix, 1))
+                            FirstName = Trim(sl.GetCellValueAsString(ix, 2))
+                            LastName = Trim(sl.GetCellValueAsString(ix, 3))
+                            Email = Trim(sl.GetCellValueAsString(ix, 4))
                             Dim m_existing As Boolean = False
-                            If DoorID <> "" Then
-                                m_existing = m_Dmgr.GetCount("dbo.tcoDoor WHERE DoorID = @p1", DoorID)
+                            If UserName <> "" Then
+                                m_existing = m_Dmgr.GetCount("dbo.tcoEmployee WHERE UserName = @p1", UserName)
                                 If Not m_existing Then
-                                    DoorKey = m_Dmgr.GetValue("EXEC ssh_getnextnumberapps @p1", 0, "DoorKey")
-                                    Dim q As New QueryBuilder("tcoDoor")
+                                    EmployeeKey = m_Dmgr.GetValue("EXEC ssh_getnextnumberapps @p1", 0, "EmployeeKey")
+                                    Dim q As New QueryBuilder("tcoEmployee")
                                     q.CommandType = QueryBuilder.CommandQuery.cqINSERT
-                                    q.AddFieldValuePair("DoorKey", DoorKey, True)
-                                    q.AddFieldValuePair("DoorID", DoorID, True)
-                                    q.AddFieldValuePair("DoorName", DoorName, True)
-                                    q.AddFieldValuePair("Description", Description, True)
+                                    q.AddFieldValuePair("EmployeeKey", EmployeeKey, True)
+                                    q.AddFieldValuePair("UserName", UserName, True)
+                                    q.AddFieldValuePair("FirstName", FirstName, True)
+                                    q.AddFieldValuePair("LastName", LastName, True)
+                                    q.AddFieldValuePair("Email", Email, True)
                                     m_Dmgr.ExecuteNonQuery(q.GetQuery)
                                 End If
                             End If
@@ -104,7 +130,7 @@ Public Class ShippingForm
 
                 Using sl = New SpreadsheetLight.SLDocument()
                     Dim m_Dmgr As New DataManager(m_ConStr)
-                    Dim dataTable As DataTable = m_Dmgr.GetDataTable("SELECT DoorKey, DoorID, DoorName, Description FROM dbo.tcoDoor")
+                    Dim dataTable As DataTable = m_Dmgr.GetDataTable("SELECT UserName, FirstName, LastName, Email FROM dbo.tcoEmployee")
 
                     For col As Integer = 0 To dataTable.Columns.Count - 1
                         sl.SetCellValue(1, col + 1, dataTable.Columns(col).ColumnName)
@@ -131,11 +157,16 @@ Public Class ShippingForm
             m_IsLoading = False
             m_IsEditing = False
 
+            UserNameTextBox.Text = String.Empty
+            FirstNameTextBox.Text = String.Empty
+            LastNameTextBox.Text = String.Empty
+            EmailTextBox.Text = String.Empty
+
             DoorIDTextBox.Text = String.Empty
             DoorNameTextBox.Text = String.Empty
             DescriptionTextBox.Text = String.Empty
 
-            DoorIDTextBox.Enabled = True
+            UserNameTextBox.Enabled = True
             ImportButton.Enabled = False
             ExportButton.Enabled = False
             AddButton.Enabled = False
@@ -155,13 +186,18 @@ Public Class ShippingForm
             m_IsEditing = True
             If DataGridView1.SelectedRows.Count > 0 Then
                 Dim dgvr As DataGridViewRow = DataGridView1.SelectedRows(0)
+                m_EmployeeKey = NullString(dgvr.Cells("EmployeeKey").Value)
+                UserNameTextBox.Text = NullString(dgvr.Cells("UserName").Value)
+                FirstNameTextBox.Text = NullString(dgvr.Cells("FirstName").Value)
+                LastNameTextBox.Text = NullString(dgvr.Cells("LastName").Value)
+                EmailTextBox.Text = NullString(dgvr.Cells("Email").Value)
+
                 m_DoorKey = NullString(dgvr.Cells("DoorKey").Value)
                 DoorIDTextBox.Text = NullString(dgvr.Cells("DoorID").Value)
                 DoorNameTextBox.Text = NullString(dgvr.Cells("DoorName").Value)
                 DescriptionTextBox.Text = NullString(dgvr.Cells("Description").Value)
 
-
-                DoorIDTextBox.Enabled = False
+                UserNameTextBox.Enabled = False
                 ImportButton.Enabled = False
                 ExportButton.Enabled = False
                 AddButton.Enabled = False
@@ -178,18 +214,23 @@ Public Class ShippingForm
         End Try
     End Sub
 
-    Private Sub DataGridView1_CellDoubleClick(sender As Object, e As DataGridViewCellEventArgs) Handles DataGridView1.CellDoubleClick
+    Private Sub DataGridView1_MouseDoubleClick(sender As Object, e As MouseEventArgs) Handles DataGridView1.MouseDoubleClick
         Try
             m_IsLoading = True
             m_IsEditing = True
             If DataGridView1.SelectedRows.Count > 0 Then
                 Dim dgvr As DataGridViewRow = DataGridView1.SelectedRows(0)
+                m_EmployeeKey = NullString(dgvr.Cells("EmployeeKey").Value)
+                UserNameTextBox.Text = NullString(dgvr.Cells("UserName").Value)
+                FirstNameTextBox.Text = NullString(dgvr.Cells("FirstName").Value)
+                LastNameTextBox.Text = NullString(dgvr.Cells("LastName").Value)
+                EmailTextBox.Text = NullString(dgvr.Cells("Email").Value)
+
                 m_DoorKey = NullString(dgvr.Cells("DoorKey").Value)
                 DoorIDTextBox.Text = NullString(dgvr.Cells("DoorID").Value)
                 DoorNameTextBox.Text = NullString(dgvr.Cells("DoorName").Value)
                 DescriptionTextBox.Text = NullString(dgvr.Cells("Description").Value)
 
-                DoorIDTextBox.Enabled = False
                 ImportButton.Enabled = False
                 ExportButton.Enabled = False
                 AddButton.Enabled = False
@@ -208,34 +249,47 @@ Public Class ShippingForm
 
     Private Sub SaveButton_Click(sender As Object, e As EventArgs) Handles SaveButton.Click
         Try
-            SaveButton.Enabled = False
-
-            If DoorIDTextBox.Text.Trim.Length = 0 Then
+            If UserNameTextBox.Text.Trim.Length = 0 Then
                 MsgBox("Please provide reason code!", MsgBoxStyle.Exclamation, "No Data")
                 SaveButton.Enabled = True
-                DoorIDTextBox.Focus()
+                UserNameTextBox.Focus()
                 Exit Try
             End If
 
             Using m_DMgr As New DataManager(m_ConStr)
 
-                Dim q As New QueryBuilder("tcoDoor")
+                Dim q As New QueryBuilder("tcoEmployee")
+                'Dim q2 As New QueryBuilder("tcoDoor")
+
 
                 If m_IsEditing = False Then
-                    Dim m_IsExisting As Boolean = m_DMgr.GetCount("dbo.tcoDoor WHERE DoorID = @p1", New Parameter(DoorIDTextBox.Text.Trim)) > 0
+                    Dim m_IsExisting As Boolean = m_DMgr.GetCount("dbo.tcoEmployee WHERE UserName = @p1", New Parameter(UserNameTextBox.Text.Trim)) > 0
                     If m_IsExisting = True Then
                         MsgBox("Reason code already exist in the database!", MsgBoxStyle.Exclamation, "Duplicate Record")
                         Exit Try
                     End If
-                    Dim DoorKey As Integer = 0
-                    DoorKey = m_DMgr.GetValue("EXEC ssh_getnextnumberapps @p1", 0, "DoorKey")
+
+                    Dim EmployeeKey As Integer = 0
+                    EmployeeKey = m_DMgr.GetValue("EXEC ssh_getnextnumberapps @p1", 0, "EmployeeKey")
+
                     q.CommandType = QueryBuilder.CommandQuery.cqINSERT
+                    q.AddFieldValuePair("EmployeeKey", EmployeeKey, True)
+                    q.AddFieldValuePair("UserName", UserNameTextBox.Text, True)
+                    q.AddFieldValuePair("FirstName", FirstNameTextBox.Text, True)
+                    q.AddFieldValuePair("LastName", LastNameTextBox.Text, True)
+                    q.AddFieldValuePair("Email", EmailTextBox.Text, True)
 
-                    q.AddFieldValuePair("DoorKey", DoorKey, True)
-                    q.AddFieldValuePair("DoorID", DoorIDTextBox.Text, True)
-                    q.AddFieldValuePair("DoorName", DoorNameTextBox.Text, True)
-                    q.AddFieldValuePair("Description", DescriptionTextBox.Text, True)
 
+                    'Dim DoorKey As Integer = 0
+                    'DoorKey = m_DMgr.GetValue("EXEC ssh_getnextnumberapps @p1", 0, "DoorKey")
+
+                    'q2.CommandType = QueryBuilder.CommandQuery.cqINSERT
+                    'q2.AddFieldValuePair("DoorKey", EmployeeKey, True)
+                    'q2.AddFieldValuePair("DoorID", DoorIDTextBox.Text, True)
+                    'q2.AddFieldValuePair("DoorName", DoorNameTextBox.Text, True)
+                    'q2.AddFieldValuePair("Description", DescriptionTextBox.Text, True)
+
+                    'm_DMgr.ExecuteNonQuery(q.GetQuery, q2.GetQuery)
                     m_DMgr.ExecuteNonQuery(q.GetQuery)
 
                     PanelBox.Visible = False
@@ -243,10 +297,10 @@ Public Class ShippingForm
 
                 Else
                     q.CommandType = QueryBuilder.CommandQuery.cqUPDATE
-                    q.AddFilter("DoorKey=" & m_DoorKey)
-                    q.AddFieldValuePair("DoorID", DoorIDTextBox.Text, True)
-                    q.AddFieldValuePair("DoorName", DoorNameTextBox.Text, True)
-                    q.AddFieldValuePair("Description", DescriptionTextBox.Text, True)
+                    q.AddFilter("EmployeeKey=" & m_EmployeeKey)
+                    q.AddFieldValuePair("FirstName", FirstNameTextBox.Text, True)
+                    q.AddFieldValuePair("LastName", LastNameTextBox.Text, True)
+                    q.AddFieldValuePair("Email", EmailTextBox.Text, True)
 
                     m_DMgr.ExecuteNonQuery(q.GetQuery)
 
@@ -289,9 +343,11 @@ Public Class ShippingForm
                         End If
 
                         'Delete Reason
+                        'm_DMgr.ExecuteNonQuery("DELETE FROM  tsoReasonCode WHERE ReasonKey= '" & dgvr.Cells("ReasonKey").Value & "'")
                         m_DMgr.ExecuteNonQuery("DELETE FROM dbo.tcoEmployee WHERE UserName = @p1", dgvr.Cells("UserName").Value)
 
                         Call RefreshList()
+
                         Call SearchAll_Call()
 
                         MsgBox("The record was deleted successfully!", MsgBoxStyle.Information, "Success")
